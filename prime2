@@ -1,0 +1,118 @@
+global _start
+
+section .bss
+
+	str: resb 12
+	cnt: resb 1
+	cnt2: resb 1
+	count: resd 1
+	lower: resd 1
+
+section .text
+
+_start:
+
+	mov eax, 2
+	mov [lower], eax
+	mov eax, 3
+	mov [count], eax
+	;xor edx, edx
+	;mov eax, [count]
+	;mov ebx, 10
+
+	;mov eax, [count]
+	jmp int2str
+
+	print:
+	mov eax, 4
+	mov ebx, 1
+	mov ecx, str
+	mov edx, [cnt]
+	add edx, 2
+	int 0x80
+	
+	next:
+	mov eax, [count]
+	cmp eax, 1000
+	jg end			; Termina o processo em n = 1000
+	mov eax, [count]
+	inc eax
+	mov [count], eax
+	xor rax, rax
+	mov eax, [lower]
+	mov ebx, eax
+	mul ebx
+	cmp eax, [count]
+	jge checkprime
+	mov eax, [lower]
+	inc eax
+	mov [lower], eax
+	jmp checkprime
+
+	end:
+	mov eax, 1
+	mov ebx, 0
+	int 0x80
+
+	int2str:		; Salva o valor de [count] em str
+
+	push rbp
+	mov rbp, rsp
+	mov eax, [count]
+	xor ebx, ebx		; Zera o contador de
+	mov [cnt], ebx		; caracteres da string
+
+	subrot:
+	xor rdx, rdx
+	mov ebx, 10
+	div ebx
+	push rdx
+	mov edx, [cnt]
+	add edx, 1
+	mov [cnt], edx
+	cmp eax, 0
+
+	jg subrot
+	;mov ebx, [cnt]
+	xor ebx, ebx
+	build:
+	xor rcx, rcx
+	pop rcx
+	add ecx, '0'
+	mov [str+ebx], ecx
+	inc ebx
+	cmp [cnt], ebx
+
+	jg build
+	mov ecx, 0xa
+	mov ebx, [cnt]
+	mov [str+ebx], ecx
+	mov ecx, 0
+	mov [str+ebx+1], ecx
+	pop rbp
+	jmp print		; Fim de int2str
+	
+	checkprime:		; Checa se o valor de [count] é primo
+	
+	mov eax, 2
+	mov [cnt], eax
+	
+	cycle:			; Testa os números até a raiz de [count]
+	cmp [cnt], [lower]
+	jg int2str
+	
+	xor rdx, rdx
+	mov eax, [count]
+	mov ebx, [cnt]
+	div ebx
+	cmp edx, 0
+	jne next		; Não é primo
+	mov eax, [cnt]
+	inc eax
+	mov [cnt], eax
+	jmp cycle
+	
+
+section .data
+
+;count: dd 92
